@@ -2,8 +2,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata = {
-  title: "Next Pokédex Auth",
-  description: "Pokedex with NextAuth authentication",
+  title: "Pokedex",
+  description: "Test Pokedex Web",
 };
 
 export default function RootLayout({

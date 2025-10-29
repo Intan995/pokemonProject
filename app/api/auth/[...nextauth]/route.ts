@@ -10,12 +10,12 @@ const handler = NextAuth({
         password: {},
       },
       async authorize(credentials) {
-        // Contoh login dummy dengan 2 role
-        if (credentials?.username === "admin" && credentials?.password === "123") {
-          return { id: "1", name: "Admin", role: "admin" };
+     
+        if (credentials?.username === "pokeone" && credentials?.password === "123") {
+          return { id: "1", name: "pokeone", role: "admin" };
         }
-        if (credentials?.username === "user" && credentials?.password === "123") {
-          return { id: "2", name: "User", role: "user" };
+        if (credentials?.username === "poketwo" && credentials?.password === "123") {
+          return { id: "2", name: "poketwo", role: "user" };
         }
         return null;
       },
