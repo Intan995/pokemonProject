@@ -22,14 +22,15 @@ export default function PokemonPage() {
         .then(async (res) => {
           const pokes = res.data.results;
 
-          const detailPromises = pokes.map(async (p) => {
+         const detailPromises = pokes.map(async (p) => {
             const detailRes = await axios.get(p.url);
             return {
               name: p.name,
               image: detailRes.data.sprites.front_default,
-              url: p.url,
+              types: detailRes.data.types.map((t) => t.type.name), // 🧠 ambil list tipe
             };
           });
+
 
           const fullDetails = await Promise.all(detailPromises);
           setPokemon(fullDetails);
@@ -38,28 +39,45 @@ export default function PokemonPage() {
     }
   }, [status, session]);
 
-  const handleClick = async (poke) => {
-    setSelectedPokemon(poke.name);
-    setLoadingDetail(true);
-    try {
-      const speciesRes = await axios.get(
-        `https://pokeapi.co/api/v2/pokemon-species/${poke.name}`
-      );
+      const handleClick = async (poke) => {
+        setSelectedPokemon(poke.name);
+        setLoadingDetail(true);
 
-      setPokemonDetail({
-        name: poke.name,
-        image: poke.image,
-        description:
-          speciesRes.data.flavor_text_entries.find(
+        try {
+          // Ambil detail species (untuk description & version)
+          const speciesRes = await axios.get(`https://pokeapi.co/api/v2/pokemon-species/${poke.name}`);
+
+          const descriptionEntry = speciesRes.data.flavor_text_entries.find(
             (entry) => entry.language.name === "en"
-          )?.flavor_text || "No description available.",
-      });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingDetail(false);
-    }
-  };
+          );
+
+          const version = descriptionEntry?.version?.name || "Unknown";
+
+          // Ambil weaknesses berdasarkan type pertama Pokémon
+          let weaknesses = [];
+          if (poke.types?.length > 0) {
+            const typeUrl = `https://pokeapi.co/api/v2/type/${poke.types[0]}`;
+            const typeRes = await axios.get(typeUrl);
+            weaknesses = typeRes.data.damage_relations.double_damage_from.map(
+              (t) => t.name
+            );
+          }
+
+          setPokemonDetail({
+            name: poke.name,
+            image: poke.image,
+            types: poke.types,
+            description: descriptionEntry?.flavor_text || "No description available.",
+            version,
+            weaknesses,
+          });
+        } catch (err) {
+          console.error("Error fetching Pokémon detail:", err);
+        } finally {
+          setLoadingDetail(false);
+        }
+      };
+
 
   // Fungsi untuk tutup modal
   const closeModal = () => {
@@ -73,9 +91,10 @@ export default function PokemonPage() {
     <div className="p-6"
       style={{
         backgroundImage: "url('/earth.gif')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        height: '100vh'
+        backgroundRepeat: 'repeat',   // 🔥 gambar akan diulang
+        backgroundSize: 'auto',       // ukuran asli gambar
+       backgroundPosition: 'center',
+       minHeight: '100vh',
       }}
     >
       {/* HEADER */}
@@ -86,7 +105,7 @@ export default function PokemonPage() {
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="bg-yellow-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-yellow-600 transition"
+          className="bg-yellow-500 text-white px-4 py-2 text-sm rounded cursor-pointer hover:bg-yellow-600 transition"
         >
           Logout
         </button>
@@ -104,12 +123,52 @@ export default function PokemonPage() {
                 selectedPokemon === p.name ? "bg-gray-200" : ""
               }`}
             >
-              <img
-                src={p.image}
-                alt={p.name}
-                className="w-20 h-20 mx-auto mb-2"
-              />
+               <div className="flex justify-center items-center w-full mb-2">
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="w-30 h-30 object-contain"
+                />
+              </div>
               <p className="capitalize font-medium">{p.name}</p>
+              {/* 🧩 Tambahkan di sini */}
+              <div className="flex flex-wrap justify-center gap-1 mt-1">
+                {p.types?.map((type) => (
+                  <span
+                    key={type}
+                    className={`text-xs px-2 py-1 rounded-md text-white capitalize ${
+                      type === 'fire'
+                        ? 'bg-red-500'
+                        : type === 'water'
+                        ? 'bg-blue-500'
+                        : type === 'grass'
+                        ? 'bg-green-500'
+                        : type === 'electric'
+                        ? 'bg-yellow-400 text-black'
+                        : type === 'psychic'
+                        ? 'bg-pink-500'
+                        : type === 'rock'
+                        ? 'bg-yellow-700'
+                        : type === 'ground'
+                        ? 'bg-amber-700'
+                        : type === 'ghost'
+                        ? 'bg-purple-600'
+                        : type === 'ice'
+                        ? 'bg-cyan-400'
+                        : type === 'dragon'
+                        ? 'bg-indigo-600'
+                        : type === 'dark'
+                        ? 'bg-gray-800'
+                        : type === 'fairy'
+                        ? 'bg-pink-300 text-black'
+                        : 'bg-gray-400'
+                    }`}
+                  >
+                    {type}
+                  </span>
+                ))}
+              </div>
+
             </div>
           ))}
         </div>
@@ -119,37 +178,97 @@ export default function PokemonPage() {
       {/* MODAL POPUP */}
 
       <Modal
-        open={!!pokemonDetail}        // buka modal jika ada pokemonDetail
-        onCancel={closeModal}         // tutup modal saat klik luar / tombol close
-        footer={null}                 // hilangkan footer default (Ok, Cancel)
-        centered                     // modal di tengah layar
-        destroyOnHidden                              // agar state modal dibersihkan saat close
+        open={!!pokemonDetail}
+        onCancel={closeModal}
+        footer={null}
+        centered
+        destroyOnHidden
+        width={700} // biar modal agak lebar
       >
         {loadingDetail ? (
-          <p>Loading detail...</p>
+          <p className="text-center">Loading detail...</p>
         ) : (
-          <>
-            <img
-              src={pokemonDetail?.image}
-              alt={pokemonDetail?.name}
-              className="w-40 h-40 mx-auto mb-4"
-            />
-            <h2 className="text-xl font-semibold capitalize mb-2 text-center">
-              {pokemonDetail?.name}
-            </h2>
-            <p className="text-gray-700">{pokemonDetail?.description}</p>
-
-            <div className="flex justify-center mt-4">
-              <button
-                onClick={closeModal}
-                className="bg-gray-300 px-4 py-2 rounded cursor-pointer hover:bg-yellow-400"
-              >
-                Close
-              </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+            {/* 🖼 Kolom Kiri - Gambar */}
+            <div className="flex flex-col items-center justify-center">
+              <img
+                src={pokemonDetail?.image}
+                alt={pokemonDetail?.name}
+                className="w-48 h-48 object-contain mb-4"
+              />
+              <div className="flex flex-wrap justify-center gap-2">
+                {pokemonDetail?.types?.map((type) => (
+                  <span
+                    key={type}
+                    className={`text-xs px-3 py-1 rounded-md text-white capitalize ${
+                      type === "fire"
+                        ? "bg-red-500"
+                        : type === "water"
+                        ? "bg-blue-500"
+                        : type === "grass"
+                        ? "bg-green-500"
+                        : type === "electric"
+                        ? "bg-yellow-400 text-black"
+                        : type === "psychic"
+                        ? "bg-pink-500"
+                        : type === "rock"
+                        ? "bg-yellow-700"
+                        : type === "ground"
+                        ? "bg-amber-700"
+                        : type === "ghost"
+                        ? "bg-purple-600"
+                        : type === "ice"
+                        ? "bg-cyan-400"
+                        : type === "dragon"
+                        ? "bg-indigo-600"
+                        : type === "dark"
+                        ? "bg-gray-800"
+                        : type === "fairy"
+                        ? "bg-pink-300 text-black"
+                        : "bg-gray-400"
+                    }`}
+                  >
+                    {type}
+                  </span>
+                ))}
+              </div>
             </div>
-          </>
+
+            {/* 📋 Kolom Kanan - Detail */}
+            <div>
+              <h2 className="text-2xl font-bold capitalize mb-2">{pokemonDetail?.name}</h2>
+
+              {/* Deskripsi */}
+              <p className="text-gray-700 mb-4 leading-relaxed">
+                {pokemonDetail?.description}
+              </p>
+
+              {/* Version */}
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Version:</strong> {pokemonDetail?.version}
+              </p>
+
+              {/* Weaknesses */}
+              {pokemonDetail?.weaknesses?.length > 0 && (
+                <div>
+                  <strong>Weaknesses:</strong>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {pokemonDetail.weaknesses.map((weak) => (
+                      <span
+                        key={weak}
+                        className="text-xs px-2 py-1 bg-red-200 text-red-800 rounded-md capitalize"
+                      >
+                        {weak}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </Modal>
+
 
     </div>
   );
