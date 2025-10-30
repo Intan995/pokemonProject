@@ -46,13 +46,13 @@ export default function LoginPage() {
           onChange={(e) => setUsername(e.target.value)}
           className="border bg-white border-yellow-300 p-2 rounded"
         />
-        <div className="relative">
+        <div className="relative border-yellow-300 border rounded">
           <input
             type={showPassword ? "text" : "password"} // toggle type
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border-yellow-300 p-2 rounded w-full pr-10"            
+            className=" p-2 rounded w-full pr-10"            
           />  
           <span
             className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer select-none text-gray-600"
