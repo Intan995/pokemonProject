@@ -15,11 +15,11 @@ export default function PokemonPage() {
 //Fetch Data Pokemon
   useEffect(() => {
     if (status === "authenticated") {
-      const role = session?.user?.role;
-      const offset = role === "admin" ? 0 : 50; // Admin: 1–50, User: 51–100
-      const limit = role === "admin" ? 20 : 10;
+      const role = session?.user?.role;    //bagian mengambil role pengguna dari objek session
+      const offset = role === "admin" ? 0 : 50; // parameter offset digunakan untuk menentukan dari urutan ke berapa data dimulai , Admin: 1–50, User: 51–100
+      const limit = role === "admin" ? 50 : 20; //pokemon yang keluar admin dapat melihat 50pokemon sedangkan user 20 pokemon
 
-      axios.get(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`)
+      axios.get(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`)  //mengambil daftar Pokémon sesuai offset dan limit yang sudah ditentukan.
         .then(async (res) => {
           const pokes = res.data.results;
 

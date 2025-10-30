@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState , useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; // menggunakan react-icons
 import { motion } from "framer-motion";
 
@@ -10,12 +10,30 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // state untuk toggle password
 
+
+// Kosongkan input saat pertama kali halaman dimuat
+  useEffect(() => {
+    setUsername("");
+    setPassword("");
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+
+    // untuk menyimpan data ke variabel sementara agar tidak kehilangan sebelum signIn
+    const user = username;
+    const pass = password;
+
+    //untuk mengosongkan field segera setelah klik login
+    setUsername("");
+    setPassword("");
+
+    // untuk menjalankan proses login
     await signIn("credentials", {
-      username,
-      password,
-      callbackUrl: "/dashboard", // default redirect user
+      username: user,
+      password: pass,
+      callbackUrl: "/dashboard",
     });
   };
 
