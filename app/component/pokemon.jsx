@@ -1,33 +1,34 @@
+// import & setup
 import { useSession, signOut } from "next-auth/react";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { Modal } from "antd";
+import axios from "axios";  //axios → Library untuk HTTP request ke API (dalam hal ini PokeAPI).
+import { useEffect, useState } from "react";  //Hook React untuk state dan side-effect.
+import { Modal } from "antd"; //modal yang di ambil dari package antdesaign
 
 export default function PokemonPage() {
-  const { data: session, status } = useSession();
-  const [pokemon, setPokemon] = useState([]);
-  const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const [pokemonDetail, setPokemonDetail] = useState(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  //State Management
+  const { data: session, status } = useSession();  
+  const [pokemon, setPokemon] = useState([]);   //mengeluarkan tampilan daftar pokemon
+  const [selectedPokemon, setSelectedPokemon] = useState(null); //menyimpan pokemon yang diklik
+  const [pokemonDetail, setPokemonDetail] = useState(null); //menyimpan data detail pokemon pada modal
+  const [loadingDetail, setLoadingDetail] = useState(false); //indikator loading saat fetch detail
   
-
+//Fetch Data Pokemon
   useEffect(() => {
     if (status === "authenticated") {
       const role = session?.user?.role;
       const offset = role === "admin" ? 0 : 50; // Admin: 1–50, User: 51–100
       const limit = role === "admin" ? 20 : 10;
 
-      axios
-        .get(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`)
+      axios.get(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`)
         .then(async (res) => {
           const pokes = res.data.results;
 
          const detailPromises = pokes.map(async (p) => {
             const detailRes = await axios.get(p.url);
             return {
-              name: p.name,
-              image: detailRes.data.sprites.front_default,
-              types: detailRes.data.types.map((t) => t.type.name), // 🧠 ambil list tipe
+              name: p.name, 
+              image: detailRes.data.sprites.front_default, //ambil image dari api
+              types: detailRes.data.types.map((t) => t.type.name), // ambil list tipe dari api
             };
           });
 
@@ -39,6 +40,7 @@ export default function PokemonPage() {
     }
   }, [status, session]);
 
+      // Menangani Klik Pokemon
       const handleClick = async (poke) => {
         setSelectedPokemon(poke.name);
         setLoadingDetail(true);
@@ -53,7 +55,7 @@ export default function PokemonPage() {
 
           const version = descriptionEntry?.version?.name || "Unknown";
 
-          // Ambil weaknesses berdasarkan type pertama Pokémon
+          // Ambil weaknesses berdasarkan type pertama Pokemon
           let weaknesses = [];
           if (poke.types?.length > 0) {
             const typeUrl = `https://pokeapi.co/api/v2/type/${poke.types[0]}`;
@@ -91,7 +93,7 @@ export default function PokemonPage() {
     <div className="p-6"
       style={{
         backgroundImage: "url('/earth.gif')",
-        backgroundRepeat: 'repeat',   // 🔥 gambar akan diulang
+        backgroundRepeat: 'repeat',   // gambar akan diulang
         backgroundSize: 'auto',       // ukuran asli gambar
        backgroundPosition: 'center',
        minHeight: '100vh',
@@ -100,7 +102,7 @@ export default function PokemonPage() {
       {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-white">
-          Halo, {session?.user?.name}! 👋
+          Halo, {session?.user?.name}! 
         </h1>
 
         <button
@@ -131,7 +133,7 @@ export default function PokemonPage() {
                 />
               </div>
               <p className="capitalize font-medium">{p.name}</p>
-              {/* 🧩 Tambahkan di sini */}
+              {/* mengeluarkan list type  */}
               <div className="flex flex-wrap justify-center gap-1 mt-1">
                 {p.types?.map((type) => (
                   <span
@@ -189,8 +191,8 @@ export default function PokemonPage() {
           <p className="text-center">Loading detail...</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
-            {/* 🖼 Kolom Kiri - Gambar */}
-            <div className="flex flex-col items-center justify-center">
+            {/* Gambar */}
+            <div className="flex flex-col items-center justify-center w-48 h-48 bg-yellow-200 rounded-lg mb-4">
               <img
                 src={pokemonDetail?.image}
                 alt={pokemonDetail?.name}
@@ -234,7 +236,7 @@ export default function PokemonPage() {
               </div>
             </div>
 
-            {/* 📋 Kolom Kanan - Detail */}
+            {/* Detail */}
             <div>
               <h2 className="text-2xl font-bold capitalize mb-2">{pokemonDetail?.name}</h2>
 

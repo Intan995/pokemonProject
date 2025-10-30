@@ -1,6 +1,7 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import NextAuth from "next-auth";  //library next untuk autentikasi
+import CredentialsProvider from "next-auth/providers/credentials";  //credencial login menggukan username dan password
 
+//konfigurasi credensial
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -43,4 +44,4 @@ const handler = NextAuth({
 });
 
 
-export { handler as GET, handler as POST };
+export { handler as GET, handler as POST };  

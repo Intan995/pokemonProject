@@ -1,20 +1,22 @@
 import "./globals.css";
-import { Providers } from "./providers";
+import { Providers } from "./providers"; //wrapper komponen yang biasa digunakan untuk mengakses diseluruh laman
 
+//laman head
 export const metadata = {
   title: "Pokedex",
   description: "Test Pokedex Web",
 };
 
 export default function RootLayout({
-  children,
+  children, //isi halaman yang akan dirender dilaman layout
 }: {
   children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        {/* //membungkus semua laman dengan providers */}
+        <Providers>{children}</Providers> 
       </body>
     </html>
   );

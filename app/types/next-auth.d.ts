@@ -5,7 +5,7 @@ declare module "next-auth" {
   interface User extends DefaultUser {
     role?: string;
   }
-
+  
   interface Session extends DefaultSession {
     user: {
       role?: string;
@@ -13,7 +13,7 @@ declare module "next-auth" {
   }
 }
 
-// ✅ Tambahkan juga ke JWT
+// menambahkan role ke JWT(jason web token) oken yang berisi informasi user
 declare module "next-auth/jwt" {
   interface JWT {
     role?: string;
